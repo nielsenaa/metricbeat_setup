@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ES_ADDON_HOST": "{{ fqdn }}",
+    {% for node in groups[es_addon_cluster_name] -%}
+    "ES_ADDON_HOST_{{ loop.index }}": "{{ hostvars[node].fqdn }}",
+    {% endfor -%}
+    "ES_ADDON_PASSWORD": "{{ hostvars[es_addon_cluster_first_node].es_addon_password }}",
+    "ES_ADDON_USER": "{{ hostvars[es_addon_cluster_first_node].es_addon_user }}",
+  }
+}
+

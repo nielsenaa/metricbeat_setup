@@ -1,0 +1,96 @@
+---
+- name: Setup Metricbeat
+  hosts: your_target_hosts
+  become: true
+
+  tasks:
+    - name: Create Metricbeat directory
+      ansible.builtin.file:
+        path: /opt/metricbeat
+        state: directory
+
+    - name: Download Metricbeat archive
+      ansible.builtin.get_url:
+        url: https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-8.6.1-linux-x86_64.tar.gz
+        dest: /opt/metricbeat-8.6.1-linux-x86_64.tar.gz
+
+    - name: Extract Metricbeat archive
+      ansible.builtin.unarchive:
+        src: /opt/metricbeat-8.6.1-linux-x86_64.tar.gz
+        dest: /opt/metricbeat
+        remote_src: yes
+        extra_opts: '--strip-components=1'
+
+    - name: Disable Metricbeat Elasticsearch module
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat modules disable elasticsearch"
+
+    - name: Enable Metricbeat Elasticsearch X-Pack module
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat modules enable elasticsearch-xpack"
+
+    - name: Write Metricbeat configuration
+      ansible.builtin.template:
+        src: metricbeat.yml.j2
+        dest: /opt/metricbeat/metricbeat.yml
+
+    - name: Write Elasticsearch-xpack configuration
+      ansible.builtin.template:
+        src: elasticsearch-xpack.yml.j2
+        dest: /opt/metricbeat/module.d/elasticsearch-xpack.yml
+
+    - name: Change ownership of metricbeat.yml to root
+      ansible.builtin.command:
+        cmd: "chown root /opt/metricbeat/metricbeat.yml"
+
+    - name: Test Metricbeat modules
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat test modules"
+
+    - name: Test Metricbeat configuration
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat test config"
+
+    - name: Test Metricbeat output
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat test output"
+
+    - name: Setup Metricbeat
+      ansible.builtin.shell:
+        cmd: "/opt/metricbeat/metricbeat setup -e"
+
+    - name: Create Metricbeat group
+      ansible.builtin.group:
+        name: metricbeat
+        state: present
+
+    - name: Create Metricbeat user
+      ansible.builtin.user:
+        name: metricbeat
+        comment: "Metricbeat user"
+        group: metricbeat
+        system: yes
+        shell: /usr/sbin/nologin
+
+    - name: Change ownership of /opt/metricbeat to metricbeat:metricbeat
+      ansible.builtin.command:
+        cmd: "chown -R metricbeat:metricbeat /opt/metricbeat"
+
+    - name: Create and write the Metricbeat systemd service
+      ansible.builtin.template:
+        src: metricbeat.service.j2
+        dest: /lib/systemd/system/metricbeat.service
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable Metricbeat systemd service
+      ansible.builtin.systemd:
+        name: metricbeat
+        enabled: yes
+
+    - name: Restart Metricbeat service
+      ansible.builtin.systemd:
+        name: metricbeat
+        state: restarted
