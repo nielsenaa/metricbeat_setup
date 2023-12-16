@@ -3,6 +3,32 @@
   hosts: your_target_hosts
   become: true
 
+  vars_prompt:
+
+    - name: ES_MONITORING_ADDON_HOST
+      prompt: "Enter the value for ES_MONITORING_ADDON_HOST"
+      private: no
+
+    - name: ES_MONITORING_ADDON_USER
+      prompt: "Enter the value for ES_MONITORING_ADDON_USER"
+      private: no
+
+    - name: ES_MONITORING_ADDON_PASSWORD
+      prompt: "Enter the value for ES_MONITORING_ADDON_PASSWORD"
+      private: no
+
+    - name: ES_MONITORING_ADDON_KIBANA_HOST
+      prompt: "Enter the value for ES_MONITORING_ADDON_KIBANA_HOST"
+      private: no
+
+    - name: ES_MONITORING_ADDON_KIBANA_CUSTOM_USER
+      prompt: "Enter the value for ES_MONITORING_ADDON_KIBANA_CUSTOM_USER"
+      private: no
+
+    - name: ES_MONITORING_ADDON_KIBANA_CUSTOM_PASSWORD
+      prompt: "Enter the value for ES_MONITORING_ADDON_KIBANA_CUSTOM_USER"
+      private: no
+
   tasks:
     - name: Create Metricbeat directory
       ansible.builtin.file:
